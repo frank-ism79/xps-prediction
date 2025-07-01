@@ -9,10 +9,7 @@ import os
 import py3Dmol
 from scipy.ndimage import gaussian_filter1d
 from ase.visualize.plot import plot_atoms
-from rdkit import Chem
 import streamlit.components.v1 as components
-from rdkit.Chem import Draw
-from rdkit.Chem.rdmolfiles import MolFromXYZBlock
 # Carica il modello ML da file locale una sola volta
 @st.cache_resource
 def load_embedded_model():
