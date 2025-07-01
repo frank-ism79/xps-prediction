@@ -1,0 +1,7 @@
+streamlit
+numpy
+matplotlib
+ase
+dscribe
+py3Dmol
+scipy
