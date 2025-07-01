@@ -13,7 +13,7 @@ import streamlit.components.v1 as components
 # Carica il modello ML da file locale una sola volta
 @st.cache_resource
 def load_embedded_model():
-    with open("C1s-v1.sav", "rb") as f:
+    with open("C1S-v1.sav", "rb") as f:
         return pickle.load(f)
 
 # Configuration of SOAP descriptors
