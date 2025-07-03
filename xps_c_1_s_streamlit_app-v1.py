@@ -40,7 +40,7 @@ def extract_features(molecule, soap, symbol="C"):
 def predict_binding_energies(model, descriptors):
     return model.predict(descriptors)
 # Show molecule
-def show_3d_molecule(xyz_string):
+def show_3d_molecule(xyz_string,color_plot):
     view = py3Dmol.view(width=500, height=400)
     view.addModel(xyz_string, 'xyz')
     view.setStyle({'stick': {}})
@@ -48,13 +48,15 @@ def show_3d_molecule(xyz_string):
 
     lines = xyz_string.strip().splitlines()
     atoms = lines[2:]  # Salta le prime due righe XYZ
+    c = 0
     for i, atom in enumerate(atoms):
         parts = atom.split()
         if len(parts) >= 4:
             x, y, z = float(parts[1]), float(parts[2]), float(parts[3])
             if parts[0]=="C":
-                view.addLabel(str(i), {"position": {"x": x, "y": y, "z": z}, "backgroundColor": "white", "fontColor": "black", "fontsize" : "3"})
-
+                
+                view.addLabel(str(i), {"position": {"x": x, "y": y, "z": z}, "backgroundColor": "white", "fontColor": color_plot[c], "fontsize" : "3"})
+                c=c+1
     components.html(view._make_html(), height=420)
 
 # -----------------------------  STREAMLIT INTERFACE -----------------------------
@@ -95,25 +97,34 @@ if xyz_file:
         dos /= (sigma * np.sqrt(2 * np.pi))  # normalizzazione Gaussiana
 
         fig, ax = plt.subplots()
-        ax.plot(energy_range, dos, color='navy')
+        color_plot = []
+        norm_dos = []
+        for i in range(len(dos)):
+            norm_dos.append(dos[i]/max(dos))
+        ax.plot(energy_range,norm_dos, color='navy')
         for i in range(len(predictions)):
-            ax.plot([predictions[i],predictions[i]],[0,0.5])
-        ax.fill_between(energy_range, dos, color='skyblue', alpha=0.5)
+            line_plot=ax.plot([predictions[i],predictions[i]],[0,0.1])
+            color_plot.append(line_plot[0].get_color())            
+        ax.fill_between(energy_range, norm_dos, color='skyblue', alpha=0.5)
         ax.set_xlabel("BE (eV)")
         ax.set_ylabel("Intensity (a.u.)")
-        ax.set_title("Simulated XPS spectra")
         ax.invert_xaxis()  # Per XPS, scala energetica decrescente
         st.pyplot(fig)
         col1, col2 = st.columns([1, 2]) 
         with(col1):
-            for idx, energy in zip(indices, predictions):
-                st.write(f"C #{idx}: Predicted BE = {energy:.2f} eV")
+            for i, (idx, energy) in enumerate(zip(indices, predictions)):              #idx, energy in zip(indices, predictions):
+                color = color_plot[i]
+                #st.write(f"C #{idx}: Predicted BE = {energy:.2f} eV")
+                st.markdown(
+        f"<span style='color:{color};'>C #{idx}: Predicted BE = {energy:.2f} eV</span>",
+        unsafe_allow_html=True
+    )
+
         with(col2):
             #st.subheader("🧬Atoms index")
             xyz_file.seek(0)
             xyz_content = xyz_file.read().decode("utf-8").strip()
-            print(xyz_content)
-            show_3d_molecule(xyz_content)
+            show_3d_molecule(xyz_content,color_plot)
 
 
     except Exception as e:
@@ -122,5 +133,21 @@ if xyz_file:
         os.unlink(temp_xyz_path)
 #else:
     #st.info("📄 Carica un file .xyz per iniziare la predizione.")
-url = "https://doi.org/10.1063/5.0272583"
-st.write("References: \n F.Porcelli, F.Filippone, E.Colasante and G.Mattioli,**Photoemission spectroscopy of organic molecules using plane wave/pseudopotential density functional theory and machine learning: A comprehensive and predictive computational protocol for isolated molecules, molecular aggregates, and organic thin films** J. Chem. Phys. 162, 244101 (**2025**) [link](%s)"  % url)
+url2 = "https://doi.org/10.1063/5.0272583"
+url1 = "https://zenodo.org/records/14905828"
+st.markdown("""
+    <style>
+    .custom-font {
+        font-family: 'Arial', cursive, sans-serif;
+        font-size: 24px;
+        color: #333333;
+    }
+    </style>
+    <div class="custom-font">
+        References
+    </div>
+""", unsafe_allow_html=True)
+st.write("The complete dataset used for the machine learning training is freely available at this [link](%s)." % url1)
+st.write("A detailed description of the full procedure, including ab-initio simulation, can be found in:")
+st.write("F. Porcelli, F. Filippone, E. Colasante, and G. Mattioli, **Photoemission spectroscopy of organic molecules using plane wave/pseudopotential density functional theory and machine learning: A comprehensive and predictive computational protocol for isolated molecules, molecular aggregates, and organic thin films**, J. Chem. Phys. 162, 244101 (**2025**) [link](%s)" % url2)
+
