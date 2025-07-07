@@ -94,8 +94,7 @@ if xyz_file:
         
 
 # Mostra il valore scelto
-        st.write(f"Valore selezionato di σ: {sigma} eV")
-        #sigma = 0.35  # broadening in eV
+        
 
         for e in predictions:
             dos += np.exp(-0.5 * ((energy_range - e) / sigma) ** 2)
