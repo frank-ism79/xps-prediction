@@ -65,7 +65,8 @@ st.set_page_config(page_title="XPS C1s Predictor", layout="centered")
 st.title("🔬 C1s BEs for isolated molecules")
 st.markdown("""
 Once the molecule is uploaded in XYZ format, the geometrical coordinates are converted into rotationally invariant descriptors.The app uses a pre-trained machine learning model to predict C1s binding energies for molecular systems containing elements ranging from N, O, and S to halogens from F to I. """)
-
+sigma_values = [0.1, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5]
+sigma = st.selectbox("Select the line broadening for the predicted spectra", sigma_values, index=3)
 xyz_file = st.file_uploader("📁 Upload molecular geometry(.xyz)", type=["xyz"])
 
 if xyz_file:
@@ -90,7 +91,11 @@ if xyz_file:
         # Parametri DOS
         energy_range = np.linspace(min(predictions) - 2, max(predictions) + 2, 1000)
         dos = np.zeros_like(energy_range)
-        sigma = 0.3  # broadening in eV
+        
+
+# Mostra il valore scelto
+        st.write(f"Valore selezionato di σ: {sigma} eV")
+        #sigma = 0.35  # broadening in eV
 
         for e in predictions:
             dos += np.exp(-0.5 * ((energy_range - e) / sigma) ** 2)
